@@ -1,3 +1,14 @@
 config.json
 .ipynb_checkpoints
 __pycache__
+*.pyc
+
+data/*.csv
+data/followers/*csv
+data/tweets/*.csv
+data/users/*.csv
+accesstoken.csv
+
+!data/followers/.gitkeep
+!data/tweets/.gitkeep
+!data/users/.gitkeep
