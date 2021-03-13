@@ -177,5 +177,5 @@ if __name__=="__main__":
     if get_followers:
         follower_extractor = FollowerExtractor(keys=access_tokens)
         df_followers = follower_extractor.get_followers(accounts=accounts)
-        df_followers.to_csv(os.path.join(FOLLOWER_FOLDER, "followers.csv", index=False))
+        df_followers.to_csv(os.path.join(FOLLOWER_FOLDER, "followers.csv"), index=False)
     
