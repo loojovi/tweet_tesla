@@ -96,18 +96,18 @@ class FollowerExtractor(Extractor):
             while not completed:
                 self.api.update_api_rate()
                 time_start = self.api.check_rate_id(time_start=time_start)
-                new_users = self.api.api.followers(screen_name=account, count=5000, cursor=cursor)
+                new_users = self.api.api.followers(screen_name=account, count=200, cursor=cursor)
 
                 if len(new_users) > 0:
+                    new_users = new_users[0]
                     follower_list.extend(new_users)
                     cursor += 1
                 else:
                     completed = True
             
-
             print("Succesfully retrived {} followers from '{}'.".format(len(follower_list), account))
             followers = [[account, user.id, user.name, user.screen_name, user.location, user.description,
-                          user.followers_count, user.friends_count, user.listed_count, user.favorites_count,
+                          user.followers_count, user.friends_count, user.listed_count, user.favourites_count,
                           user.statuses_count, user.created_at, user.profile_image_url_https, 
                           user.default_profile_image] for user in follower_list]
             all_followers.extend(followers)
@@ -155,7 +155,7 @@ if __name__=="__main__":
     USER_FOLDER = os.path.join(MAIN_FOLDER, "data", "users")
     FOLLOWER_FOLDER = os.path.join(MAIN_FOLDER, "data", "followers")
 
-    accounts = ['kia', 'hyundai', 'VW']#, 'tesla']
+    accounts = ['kia', 'hyundai']#, 'VW', 'tesla']
 
     if not os.path.isdir(TWEET_FOLDER):
         os.mkdir(TWEET_FOLDER)
