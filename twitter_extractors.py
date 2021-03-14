@@ -73,13 +73,18 @@ class TweetExtractor(Extractor):
 class FollowerExtractor(Extractor):
     def __init__(self, keys):
         super().__init__(keys=keys, endpoint="followers")
+        self.max_count = 5000
 
     def _process_followers(self, followers):
+        """
         df_followers = pd.DataFrame(followers,
                                     columns=["account", "user_id", "user_name", "screen_name", "location",
                                              "description", "follower_count", "following_count", "listed_count",
                                              "favorite_count", "status_count", "created_at", "profile_image_url",
                                              "default_profile_image"])
+        """
+
+        df_followers = pd.DataFrame(followers, columns=["account", "follower_user_id"])
         return df_followers
 
     def get_followers(self, accounts):
@@ -92,24 +97,35 @@ class FollowerExtractor(Extractor):
             follower_list = []
             completed = False
             cursor = -1
-            
-            while not completed:
-                self.api.update_api_rate()
-                time_start = self.api.check_rate_id(time_start=time_start)
-                new_users = self.api.api.followers(screen_name=account, count=200, cursor=cursor)
 
-                if len(new_users) > 0:
-                    new_users = new_users[0]
+            pages = tweepy.Cursor(self.api.api.followers_ids, screen_name=account, count=self.max_count).pages()
+
+            while not completed:
+                try:
+                    new_users = pages.next()
                     follower_list.extend(new_users)
-                    cursor += 1
-                else:
-                    completed = True
+
+                    if len(new_users) < self.max_count:
+                        completed = True
+                except Exception as e:
+                    print(e)
+                    self.api.update_api_rate()
+                    time_start = self.api.check_rate_id(time_start=time_start)
+                    follower_list.extend(new_users)
+                    pages = tweepy.Cursor(self.api.api.followers_ids,
+                                          screen_name=account,
+                                          count=self.max_count,
+                                          cursor=pages.next_cursor).pages()
             
             print("Succesfully retrived {} followers from '{}'.".format(len(follower_list), account))
+            """
             followers = [[account, user.id, user.name, user.screen_name, user.location, user.description,
                           user.followers_count, user.friends_count, user.listed_count, user.favourites_count,
                           user.statuses_count, user.created_at, user.profile_image_url_https, 
                           user.default_profile_image] for user in follower_list]
+            """
+
+            followers = [[account, user_id] for user_id in follower_list]
             all_followers.extend(followers)
 
         df_followers = self._process_followers(followers=all_followers)
@@ -155,7 +171,8 @@ if __name__=="__main__":
     USER_FOLDER = os.path.join(MAIN_FOLDER, "data", "users")
     FOLLOWER_FOLDER = os.path.join(MAIN_FOLDER, "data", "followers")
 
-    accounts = ['kia', 'hyundai']#, 'VW', 'tesla']
+    accounts = ['kia', 'hyundai', 'VW']#, 'tesla']
+    #accounts = ["Zo2420"]
 
     if not os.path.isdir(TWEET_FOLDER):
         os.mkdir(TWEET_FOLDER)

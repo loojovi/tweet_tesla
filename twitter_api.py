@@ -49,7 +49,7 @@ class TwitterAPI(object):
         if self.endpoint == "user_timeline":
             self.rate_id = rate_limit_status['resources']['statuses']['/statuses/user_timeline']['remaining'] - 1
         elif self.endpoint == "followers":
-            self.rate_id = rate_limit_status['resources']['followers']['/followers/list']['remaining'] - 1
+            self.rate_id = rate_limit_status['resources']['followers']['/followers/ids']['remaining'] - 1
 
     def check_rate_id(self, time_start):
         if self.rate_id <= 1:
