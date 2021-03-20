@@ -4,12 +4,14 @@ __pycache__
 *.pyc
 .DS_Store
 
+Archive/*
 data/*.csv
-data/followers/*csv
+data/follower_ids/*.csv
 data/tweets/*.csv
 data/users/*.csv
+data/final_data/*
 accesstoken.csv
 
-!data/followers/.gitkeep
+!data/follower_ids/.gitkeep
 !data/tweets/.gitkeep
 !data/users/.gitkeep
