@@ -201,6 +201,7 @@ class TweetSearchExtractor(Extractor):
                                           q=query,
                                           count=self.max_count,
                                           tweet_mode="extended",
+                                          result_type="recent",
                                           max_id=max_id).pages()
 
                 page_num += 1
@@ -283,7 +284,11 @@ if __name__=="__main__":
 
     accounts = ['kia', 'hyundai', 'VW', 'tesla']
     queries = ['#kia', '#hyundai', '#vw', '#tesla',
-               '@kia', '@hyundai', '@VW', '@tesla']
+               '@kia', '@kia_worldwide', '@kiamotorsin', '@kiauk', '@kiacanada', '@kiaaustralia', 
+               '@hyundai', '@HMGnewsroom', '@Hyundai_Global', '@HyundaiIndia', '@Hyundai_UK', 
+               '@HyundaiCanada', '@HyundaiAus',
+               '@VW', '@volkswagen', '@vwgroup', '@ukvolkswagen', '@vwcanada', '@volkswagenindia', '@volkswagenau', 
+               '@tesla']
     #accounts = ["Zo2420"]
 
     if not os.path.isdir(TWEET_FOLDER):
