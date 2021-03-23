@@ -31,14 +31,13 @@ pip install -r requirements.txt
 ```bash
 python twitter_extractors.py --help
 
-usage: twitter_extractors.py [-h] [--get_tweets GET_TWEETS]
-                             [--get_users GET_USERS]
-                             [--get_followers GET_FOLLOWERS]
+usage: twitter_extractors.py [-h] [--get_tweets GET_TWEETS] [--get_users GET_USERS] [--get_follower_ids GET_FOLLOWER_IDS] [--get_mentions_hashtags GET_MENTIONS_HASHTAGS]
 
 optional arguments:
   -h, --help            show this help message and exit
   --get_tweets GET_TWEETS
   --get_users GET_USERS
-  --get_followers GET_FOLLOWERS
+  --get_follower_ids GET_FOLLOWER_IDS
+  --get_mentions_hashtags GET_MENTIONS_HASHTAGS
 ```
 

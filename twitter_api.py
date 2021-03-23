@@ -52,6 +52,8 @@ class TwitterAPI(object):
             self.rate_id = rate_limit_status['resources']['followers']['/followers/ids']['remaining'] - 1
         elif self.endpoint == "users":
             self.rate_id = rate_limit_status['resources']['users']['/users/lookup']['remaining'] - 1
+        elif self.endpoint == "search_tweet":
+            self.rate_id = rate_limit_status['resources']['search']['/search/tweets']['remaining']-1
 
         print("Remaining rate_id: {}".format(self.rate_id))
 

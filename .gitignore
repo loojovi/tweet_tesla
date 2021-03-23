@@ -9,6 +9,7 @@ data/*.csv
 data/follower_ids/*.csv
 data/tweets/*.csv
 data/users/*.csv
+data/mentions_and_hashtags/*.csv
 data/final_data/*
 accesstoken.csv
 

@@ -109,7 +109,7 @@ class FollowerIDExtractor(Extractor):
                                           count=self.max_count,
                                           cursor=pages.next_cursor).pages()
             
-            print("Succesfully retrived {} followers from '{}'.".format(len(follower_list), account))
+            print("Succesfully retrieved {} followers from '{}'.".format(len(follower_list), account))
 
             followers = [[account, user_id] for user_id in follower_list]
             all_followers.extend(followers)
@@ -155,6 +155,64 @@ class UserExtractor(Extractor):
 
         return df_users
 
+class TweetSearchExtractor(Extractor):
+    def __init__(self, keys):
+        super().__init__(keys=keys, endpoint="search_tweet")
+        self.max_count = 100
+
+    def _process_tweets(self, tweets):
+        df_tweets = pd.DataFrame(tweets,
+                                 columns=["query", "tweet_id", "tweet", "created_at", "favorite_count",
+                                          "retweet_count", "reply_to_user", "reply_to_tweet_id", 
+                                          "screen_name", "user_id"])
+
+        return df_tweets
+
+    def get_tweets(self, queries):
+        time_start = time.time()
+
+        all_tweets = []
+
+        for query in queries:
+            print("Getting tweets for query '{}'.".format(query))
+            tweet_list = []
+            num_pages = 500
+            completed = False
+            cursor = -1
+
+            pages = tweepy.Cursor(self.api.api.search, q=query, count=self.max_count, tweet_mode="extended").pages()
+            page_num = 0
+
+            while not completed and page_num < num_pages:
+                try:
+                    new_tweets = pages.next()
+                    tweet_list.extend(new_tweets)
+
+                    if len(new_tweets) < self.max_count:
+                        completed = True
+
+                except Exception as e:
+                    print(e)
+                    self.api.update_api_rate()
+                    time_start = self.api.check_rate_id(time_start=time_start)
+                    tweet_list.extend(new_tweets)
+                    max_id = tweet_list[-1].id
+                    pages = tweepy.Cursor(self.api.api.search,
+                                          q=query,
+                                          count=self.max_count,
+                                          tweet_mode="extended",
+                                          max_id=max_id).pages()
+
+                page_num += 1
+            print("Successfully retrieved {} tweets for '{}'.".format(len(tweet_list), query))
+
+            tweets = [[query, tweet.id, tweet.full_text, tweet.created_at, tweet.favorite_count, tweet.retweet_count,
+                       tweet.in_reply_to_screen_name, tweet.in_reply_to_status_id, tweet.user.screen_name,
+                       tweet.user.id] for tweet in tweet_list]
+            all_tweets.extend(tweets)
+
+        df_tweets = self._process_tweets(tweets=all_tweets)
+        return df_tweets
 
 
 def combine_results(result):
@@ -190,6 +248,11 @@ if __name__=="__main__":
                         required=False,
                         type=str,
                         default="False")
+    parser.add_argument("--get_mentions_hashtags",
+                        required=False,
+                        type=str,
+                        default="False")
+
     args = parser.parse_args()
 
     get_tweets = args.get_tweets.lower()
@@ -201,18 +264,26 @@ if __name__=="__main__":
     get_follower_ids = args.get_follower_ids.lower()
     get_follower_ids = get_follower_ids == "true"
 
+    get_mentions_hashtags = args.get_mentions_hashtags.lower()
+    get_mentions_hashtags = get_mentions_hashtags == "true"
+
     MAIN_FOLDER = os.path.dirname(__file__)
     ACCESS_TOKEN_FILE = os.path.join(MAIN_FOLDER, "accesstoken.csv")
 
     TWEET_FOLDER = os.path.join(MAIN_FOLDER, "data", "tweets")
     USER_FOLDER = os.path.join(MAIN_FOLDER, "data", "users")
     FOLLOWER_ID_FOLDER = os.path.join(MAIN_FOLDER, "data", "follower_ids")
+    MENTION_HASHTAG_FOLDER = os.path.join(MAIN_FOLDER, "data", "mentions_and_hashtags")
 
     TWEET_FILE = os.path.join(TWEET_FOLDER, "tweets.csv")
     FOLLOWER_ID_FILE = os.path.join(FOLLOWER_ID_FOLDER, "follower_ids.csv")
     USER_FILE = os.path.join(USER_FOLDER, "users.csv")
+    MENTION_HASHTAG_FILE = os.path.join(MENTION_HASHTAG_FOLDER, "mentions_and_hashtags.csv")
+
 
     accounts = ['kia', 'hyundai', 'VW', 'tesla']
+    queries = ['#kia', '#hyundai', '#vw', '#tesla',
+               '@kia', '@hyundai', '@VW', '@tesla']
     #accounts = ["Zo2420"]
 
     if not os.path.isdir(TWEET_FOLDER):
@@ -223,6 +294,9 @@ if __name__=="__main__":
 
     if not os.path.isdir(FOLLOWER_ID_FOLDER):
         os.mkdir(FOLLOWER_ID_FOLDER)
+
+    if not os.path.isdir(MENTION_HASHTAG_FOLDER):
+        os.mkdir(MENTION_HASHTAG_FOLDER)
 
     access_tokens = pd.read_csv(ACCESS_TOKEN_FILE)
     access_tokens = access_tokens.values.tolist()
@@ -249,4 +323,7 @@ if __name__=="__main__":
             df_users = pd.concat(df_users)
             df_users.to_csv(USER_FILE, index=False)
 
-
+    if get_mentions_hashtags:
+        tweet_search_extractor = TweetSearchExtractor(keys=access_tokens)
+        df_tweets = tweet_search_extractor.get_tweets(queries=queries)
+        df_tweets.to_csv(MENTION_HASHTAG_FILE, index=False)
